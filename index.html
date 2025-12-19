@@ -61,17 +61,33 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="flex border-b">
-                    <button id="btn-before" class="flex-1 py-4 text-center font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors" onclick="switchConcept('before')">
-                        🚛 これまで（コンテナなし）
-                    </button>
-                    <button id="btn-after" class="flex-1 py-4 text-center font-bold bg-blue-600 text-white transition-colors shadow-inner" onclick="switchConcept('after')">
-                        🚢 これから（コンテナあり）
-                    </button>
-                </div>
+                <div class="grid md:grid-cols-2 gap-0">
+                    <!-- Before -->
+                    <div class="p-8 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 grayscale opacity-50">🚛</div>
+                            <h3 class="font-bold text-slate-600 text-lg">従来の開発 (Before)</h3>
+                        </div>
+                        <ul class="space-y-4 text-sm text-slate-600">
+                            <li class="flex items-start"><span class="mr-2 text-red-500 font-bold">✕</span> 「私のPCでは動くのに...」が発生</li>
+                            <li class="flex items-start"><span class="mr-2 text-red-500 font-bold">✕</span> 環境構築手順書が古くて動かない</li>
+                            <li class="flex items-start"><span class="mr-2 text-red-500 font-bold">✕</span> 本番サーバーの設定ミスで障害</li>
+                        </ul>
+                    </div>
 
-                <div class="p-8 min-h-[300px] flex flex-col md:flex-row items-center justify-center gap-8 transition-all duration-500" id="concept-display">
-                    <!-- Content injected via JS -->
+                    <!-- After -->
+                    <div class="p-8 bg-blue-50/50 relative">
+                        <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">Recommended</div>
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🚢</div>
+                            <h3 class="font-bold text-blue-700 text-lg">コンテナ開発 (After)</h3>
+                        </div>
+                        <ul class="space-y-4 text-sm text-slate-700">
+                            <li class="flex items-start"><span class="mr-2 text-green-500 font-bold">◎</span> 誰でも同じ環境が一瞬で手に入る</li>
+                            <li class="flex items-start"><span class="mr-2 text-green-500 font-bold">◎</span> 本番環境と同じ構成でテスト可能</li>
+                            <li class="flex items-start"><span class="mr-2 text-green-500 font-bold">◎</span> 環境そのものをコードで管理 (IaC)</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
@@ -224,7 +240,6 @@
         function init() {
             renderNav();
             loadStepContent(0);
-            switchConcept('before');
             initChart();
         }
 
@@ -259,22 +274,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function switchConcept(type) {
-            const display = document.getElementById('concept-display');
-            const btnBefore = document.getElementById('btn-before');
-            const btnAfter = document.getElementById('btn-after');
-
-            if (type === 'before') {
-                display.innerHTML = '<div class="text-center space-y-4 animate-fade-in"><div class="text-6xl">🚛</div><h3 class="font-bold text-slate-700">従来の開発 (Before)</h3><ul class="text-left text-sm text-slate-600 space-y-2 bg-slate-50 p-4 rounded-lg"><li>❌ 「私のPCでは動くのに...」が発生</li><li>❌ 環境構築手順書が古くて動かない</li><li>❌ 本番サーバーの設定ミスで障害</li></ul></div>';
-                btnBefore.className = "flex-1 py-4 text-center font-bold bg-slate-200 text-slate-700 shadow-inner";
-                btnAfter.className = "flex-1 py-4 text-center font-bold bg-white text-slate-500 hover:bg-slate-50 transition-colors";
-            } else {
-                display.innerHTML = '<div class="text-center space-y-4 animate-fade-in"><div class="text-6xl">🚢</div><h3 class="font-bold text-blue-700">コンテナ開発 (After)</h3><ul class="text-left text-sm text-slate-600 space-y-2 bg-blue-50 p-4 rounded-lg"><li>✅ 誰でも同じ環境が一瞬で手に入る</li><li>✅ 本番環境と同じ構成でテスト可能</li><li>✅ 環境そのものをコードで管理 (IaC)</li></ul></div>';
-                btnAfter.className = "flex-1 py-4 text-center font-bold bg-blue-600 text-white shadow-inner";
-                btnBefore.className = "flex-1 py-4 text-center font-bold bg-white text-slate-500 hover:bg-slate-50 transition-colors";
-            }
         }
 
         function initChart() {
