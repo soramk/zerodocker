@@ -331,13 +331,65 @@
                         </div>
 
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="font-bold text-lg text-slate-700 mb-2">裏側で起きていること</h3>
+                            <h3 class="font-bold text-lg text-slate-700 mb-4 text-center">Dev Containers の仕組み (アーキテクチャ)</h3>
+                            
+                            <div class="w-full overflow-hidden mb-6">
+                                <svg viewBox="0 0 600 340" class="w-full h-auto max-w-lg mx-auto" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Host OS -->
+                                    <rect x="20" y="20" width="240" height="300" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />
+                                    <text x="140" y="50" text-anchor="middle" font-weight="bold" fill="#64748b">Host OS (Win/Mac)</text>
+                                    
+                                    <!-- VS Code Client -->
+                                    <rect x="50" y="80" width="180" height="100" rx="6" fill="#ffffff" stroke="#007acc" stroke-width="2" />
+                                    <text x="140" y="110" text-anchor="middle" font-weight="bold" fill="#007acc">VS Code (Client)</text>
+                                    <text x="140" y="130" text-anchor="middle" font-size="10" fill="#64748b">UI / Theme / Keybindings</text>
+                                    
+                                    <!-- Source Code Local -->
+                                    <g transform="translate(50, 220)">
+                                        <rect width="180" height="60" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="2" />
+                                        <text x="90" y="25" text-anchor="middle" font-size="20">📂</text>
+                                        <text x="90" y="45" text-anchor="middle" font-size="10" fill="#64748b">Source Code (Local)</text>
+                                    </g>
+
+                                    <!-- Container -->
+                                    <rect x="340" y="20" width="240" height="300" rx="10" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2" />
+                                    <text x="460" y="50" text-anchor="middle" font-weight="bold" fill="#0369a1">Dev Container (Linux)</text>
+                                    
+                                    <!-- VS Code Server -->
+                                    <rect x="370" y="80" width="180" height="120" rx="6" fill="#ffffff" stroke="#16825d" stroke-width="2" />
+                                    <text x="460" y="110" text-anchor="middle" font-weight="bold" fill="#16825d">VS Code Server</text>
+                                    <text x="460" y="130" text-anchor="middle" font-size="10" fill="#64748b">Extensions (Python, etc.)</text>
+                                    <text x="460" y="150" text-anchor="middle" font-size="10" fill="#64748b">Terminal / Debugger</text>
+                                    <text x="460" y="170" text-anchor="middle" font-size="10" fill="#64748b">Runtime (Python 3.9)</text>
+
+                                    <!-- Mounted Source -->
+                                    <g transform="translate(370, 220)">
+                                        <rect width="180" height="60" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="4,2" />
+                                        <text x="90" y="25" text-anchor="middle" font-size="20">📂</text>
+                                        <text x="90" y="45" text-anchor="middle" font-size="10" fill="#64748b">Mounted Source</text>
+                                    </g>
+
+                                    <!-- Connections -->
+                                    <path d="M 230 130 L 370 130" stroke="#007acc" stroke-width="3" marker-end="url(#arrow-blue)" />
+                                    <rect x="265" y="115" width="70" height="30" rx="15" fill="#fff" stroke="#007acc" />
+                                    <text x="300" y="134" text-anchor="middle" font-size="10" font-weight="bold" fill="#007acc">Connect</text>
+
+                                    <path d="M 230 250 L 370 250" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5,3" marker-end="url(#arrow-orange)" />
+                                    <rect x="265" y="235" width="70" height="30" rx="15" fill="#fff" stroke="#f59e0b" />
+                                    <text x="300" y="254" text-anchor="middle" font-size="10" font-weight="bold" fill="#f59e0b">Mount</text>
+
+                                    <defs>
+                                        <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#007acc" /></marker>
+                                        <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b" /></marker>
+                                    </defs>
+                                </svg>
+                            </div>
+
+                            <h4 class="font-bold text-sm text-slate-700 mb-2">ポイント:</h4>
                             <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
-                                <li>Dockerイメージのビルド（またはプル）</li>
-                                <li>コンテナの起動</li>
-                                <li><strong>VS Code Server</strong> のコンテナへのインストール</li>
-                                <li>指定した拡張機能のインストール</li>
-                                <li>ソースコードのマウント</li>
+                                <li><strong>UIと実行環境の分離:</strong> VS Codeの画面はPCで動きますが、コマンドやプログラムはコンテナ内で動きます。</li>
+                                <li><strong>拡張機能もコンテナの中:</strong> Pythonの補完機能などはコンテナ内の「VS Code Server」が担当します。</li>
+                                <li><strong>ファイル共有:</strong> PCのフォルダをコンテナに見せる（マウントする）ことで、編集結果が即座に反映されます。</li>
                             </ul>
                         </div>
                     </div>
@@ -493,7 +545,7 @@
                                 全てがコンテナ化された今、最後の仕上げは「自動化」です。
                             </p>
                             <div class="flex justify-center gap-4">
-                                <a href="#" class="inline-block bg-white text-blue-700 font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105">
+                                <a href="../Step5/Step5_Docker_Tutorial.html" class="inline-block bg-white text-blue-700 font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105">
                                     Step 5 へ (CI/CD自動化)
                                 </a>
                             </div>

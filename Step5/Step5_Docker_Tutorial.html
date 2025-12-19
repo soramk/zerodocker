@@ -65,32 +65,27 @@
             border-left: 4px solid transparent;
         }
         /* Pipeline Animation Styles */
-        .pipeline-node {
-            transition: all 0.5s ease;
+        .gh-step-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
         }
-        .pipeline-line {
-            transition: all 0.5s ease;
-            height: 4px;
-            background-color: #d0d7de;
-        }
-        .pipeline-node.completed {
-            background-color: #2ea44f;
+        .gh-step-item.active {
+            background-color: #1f6feb; /* GitHub Blue */
             color: white;
-            border-color: #2ea44f;
         }
-        .pipeline-node.running {
-            background-color: #bf8700; /* Yellow/Orange */
-            color: white;
-            border-color: #bf8700;
-            animation: pulse 1s infinite;
+        .gh-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        .pipeline-line.completed {
-            background-color: #2ea44f;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -341,55 +336,28 @@
                             </p>
                         </div>
 
-                        <!-- Pipeline Visualizer -->
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-4">
-                            <div class="flex items-center justify-between max-w-3xl mx-auto relative">
-                                <!-- Line Background -->
-                                <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-0"></div>
-                                
-                                <!-- Node 1 -->
-                                <div id="node-1" class="pipeline-node relative z-10 w-12 h-12 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center font-bold text-gray-500">
-                                    1
-                                    <div class="absolute -bottom-6 text-xs text-gray-500 w-24 text-center font-normal">Queued</div>
+                        <!-- GitHub Actions UI Simulator -->
+                        <div class="flex flex-col md:flex-row gap-4 h-[450px]">
+                            <!-- Left: Steps List -->
+                            <div class="w-full md:w-1/3 bg-[#0d1117] rounded-lg border border-gray-700 p-4 font-mono text-sm text-gray-300 overflow-y-auto">
+                                <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
+                                    <span class="font-bold text-gray-100">build</span>
+                                    <span class="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300" id="job-status">Queued</span>
                                 </div>
-                                <!-- Line 1 -->
-                                <div id="line-1" class="pipeline-line flex-grow h-1 bg-gray-200 z-0"></div>
-                                
-                                <!-- Node 2 -->
-                                <div id="node-2" class="pipeline-node relative z-10 w-12 h-12 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center font-bold text-gray-500">
-                                    2
-                                    <div class="absolute -bottom-6 text-xs text-gray-500 w-24 text-center font-normal">Checkout</div>
-                                </div>
-                                <!-- Line 2 -->
-                                <div id="line-2" class="pipeline-line flex-grow h-1 bg-gray-200 z-0"></div>
-
-                                <!-- Node 3 -->
-                                <div id="node-3" class="pipeline-node relative z-10 w-12 h-12 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center font-bold text-gray-500">
-                                    3
-                                    <div class="absolute -bottom-6 text-xs text-gray-500 w-24 text-center font-normal">Build</div>
-                                </div>
-                                
-                                <!-- Line 3 -->
-                                <div id="line-3" class="pipeline-line flex-grow h-1 bg-gray-200 z-0"></div>
-
-                                <!-- Node 4 -->
-                                <div id="node-4" class="pipeline-node relative z-10 w-12 h-12 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center font-bold text-gray-500">
-                                    4
-                                    <div class="absolute -bottom-6 text-xs text-gray-500 w-24 text-center font-normal">Complete</div>
+                                <div id="gh-step-list" class="space-y-1">
+                                    <!-- Steps injected by JS -->
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Action Runner Terminal -->
-                        <div class="bg-[#0d1117] rounded-lg shadow-2xl border border-gray-700 font-mono text-xs text-gray-300 p-1">
-                            <div class="flex items-center px-4 py-2 bg-[#161b22] rounded-t border-b border-gray-700 mb-2">
-                                <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                                <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-                                <div class="w-3 h-3 rounded-full bg-green-500 mr-4"></div>
-                                <span class="text-gray-400">gh-actions-runner-2b7a9f -- build-job</span>
-                            </div>
-                            <div class="p-4 h-64 overflow-y-auto" id="runner-logs">
-                                <div class="text-gray-500 animate-pulse">Waiting for runner...</div>
+                            <!-- Right: Logs -->
+                            <div class="w-full md:w-2/3 bg-[#0d1117] rounded-lg border border-gray-700 font-mono text-xs text-gray-300 flex flex-col">
+                                <div class="px-4 py-2 bg-[#161b22] rounded-t border-b border-gray-700 flex justify-between items-center">
+                                    <span class="font-bold text-gray-100" id="log-header">Initializing...</span>
+                                    <span class="text-gray-500 text-[10px]">0s</span>
+                                </div>
+                                <div class="p-4 flex-grow overflow-y-auto" id="runner-logs">
+                                    <div class="text-gray-500 animate-pulse">Waiting for runner...</div>
+                                </div>
                             </div>
                         </div>
                         
@@ -497,7 +465,7 @@
                             <p class="text-sm opacity-90 mb-4">
                                 作ったコンテナを、今度は「数百個同時に管理」し「世界中に公開」する技術が待っています。
                             </p>
-                            <a href="#" class="inline-block bg-white text-purple-600 font-bold py-3 px-8 rounded-full shadow transition-transform hover:scale-105">
+                            <a href="../index.html" class="inline-block bg-white text-purple-600 font-bold py-3 px-8 rounded-full shadow transition-transform hover:scale-105">
                                 最初のページに戻る
                             </a>
                         </div>
@@ -627,85 +595,106 @@ jobs:
 
         function runPipelineSimulation() {
             const logsArea = document.getElementById('runner-logs');
+            const stepListArea = document.getElementById('gh-step-list');
+            const jobStatus = document.getElementById('job-status');
+            const logHeader = document.getElementById('log-header');
             const finishBtn = document.getElementById('finish-btn-area');
             
             // Safety Check: Exit if user navigated away
             if (!logsArea) return;
 
-            const steps = [
-                { node: 'node-1', line: 'line-1', delay: 500, log: "Starting workflow run..." },
-                { node: 'node-1', line: 'line-1', delay: 1000, log: "Provisioning server..." },
-                { node: 'node-2', line: 'line-1', delay: 2000, log: "Checkout repository..." },
-                { node: 'node-2', line: 'line-2', delay: 3000, log: "Setting up Docker..." },
-                { node: 'node-3', line: 'line-2', delay: 4000, log: "Step: Build Docker image" },
-                { node: 'node-3', line: 'line-2', delay: 4500, log: " > docker build . -t my-app" },
-                { node: 'node-3', line: 'line-2', delay: 5000, log: " > [1/3] FROM python:3.9" },
-                { node: 'node-3', line: 'line-2', delay: 5500, log: " > [2/3] COPY . ." },
-                { node: 'node-3', line: 'line-2', delay: 6000, log: " > [3/3] RUN pip install" },
-                { node: 'node-3', line: 'line-3', delay: 7000, log: "Build completed successfully." },
-                { node: 'node-4', line: 'line-3', delay: 8000, log: "Cleaning up..." },
-                { node: 'node-4', line: 'line-3', delay: 8500, log: "Job completed." }
+            // Define Steps
+            const ghSteps = [
+                { id: 'setup', label: 'Set up job' },
+                { id: 'checkout', label: 'Run actions/checkout@v3' },
+                { id: 'build', label: 'Build the Docker image' },
+                { id: 'post', label: 'Post Run actions/checkout@v3' },
+                { id: 'complete', label: 'Complete job' }
             ];
 
-            // Reset UI
+            // Initialize UI
             logsArea.innerHTML = '';
-            document.querySelectorAll('.pipeline-node').forEach(n => n.className = 'pipeline-node relative z-10 w-12 h-12 rounded-full bg-white border-4 border-gray-300 flex items-center justify-center font-bold text-gray-500');
-            document.querySelectorAll('.pipeline-line').forEach(l => l.style.backgroundColor = '#d0d7de');
+            stepListArea.innerHTML = ghSteps.map(s => `
+                <div id="step-${s.id}" class="gh-step-item">
+                    <div class="gh-icon mr-3 text-gray-500">
+                        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"></path></svg>
+                    </div>
+                    <span>${s.label}</span>
+                </div>
+            `).join('');
+            jobStatus.innerText = "In progress";
+            jobStatus.className = "text-xs bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded border border-yellow-600/30";
+
+            // Simulation Sequence
+            const sequence = [
+                { stepId: 'setup', delay: 500, logs: ["Current runner version: '2.311.0'", "Operating System: Ubuntu 22.04.3 LTS", "Virtual Environment: Environment: ubuntu-22.04"] },
+                { stepId: 'checkout', delay: 2000, logs: ["Syncing repository: user/my-app", "Getting Git credentials for https://github.com/...", "Fetching the repository"] },
+                { stepId: 'build', delay: 3500, logs: ["/usr/bin/docker build -t my-image-name:1704067200 .", "#1 [internal] load build definition from Dockerfile", "#1 transferring dockerfile: 320B done", "#2 [internal] load .dockerignore", "#3 [internal] load metadata for docker.io/library/python:3.9", "#4 [1/3] FROM python:3.9", "#5 [2/3] COPY . .", "#6 [3/3] RUN pip install -r requirements.txt", "Collecting Flask==3.0.0", "Downloading Flask-3.0.0-py3-none-any.whl (99 kB)", "Successfully built 12345abcdef"] },
+                { stepId: 'post', delay: 7000, logs: ["Post job cleanup.", "Cleaning up orphan processes"] },
+                { stepId: 'complete', delay: 8000, logs: ["Job completed successfully"] }
+            ];
 
             // Animation Loop
-            steps.forEach(s => {
+            sequence.forEach((seq, index) => {
                 const id = setTimeout(() => {
-                    // Critical Safety Check inside each timeout
                     const currentLogsArea = document.getElementById('runner-logs');
                     if (!currentLogsArea) return;
 
-                    // Log
-                    currentLogsArea.innerHTML += `<div class="text-gray-300 font-mono mb-1">> ${s.log}</div>`;
-                    currentLogsArea.scrollTop = currentLogsArea.scrollHeight;
-
-                    // Visual Node Update
-                    if(s.node) {
-                        const nodeEl = document.getElementById(s.node);
-                        if (nodeEl) { // Check existence before accessing properties
-                            // Make active
-                            nodeEl.classList.remove('bg-white', 'text-gray-500', 'border-gray-300');
-                            nodeEl.classList.add('running');
-                            
-                            // Previous nodes complete
-                            if(s.node === 'node-2') markComplete('node-1', 'line-1');
-                            if(s.node === 'node-3') markComplete('node-2', 'line-2');
-                            if(s.node === 'node-4') markComplete('node-3', 'line-3');
-                        }
+                    // 1. Mark previous step as done
+                    if (index > 0) {
+                        const prevId = sequence[index - 1].stepId;
+                        updateStepUI(prevId, 'success');
                     }
-                }, s.delay);
+
+                    // 2. Mark current step as running
+                    updateStepUI(seq.stepId, 'running');
+                    
+                    // 3. Update Header
+                    const stepLabel = ghSteps.find(s => s.id === seq.stepId).label;
+                    document.getElementById('log-header').innerText = stepLabel;
+
+                    // 4. Stream Logs
+                    seq.logs.forEach((logLine, i) => {
+                        setTimeout(() => {
+                            if(document.getElementById('runner-logs')) {
+                                currentLogsArea.innerHTML += `<div class="text-gray-300 mb-0.5 flex"><span class="text-gray-600 mr-2 select-none">${new Date().toISOString().split('T')[1].slice(0,8)}</span> ${logLine}</div>`;
+                                currentLogsArea.scrollTop = currentLogsArea.scrollHeight;
+                            }
+                        }, i * 300);
+                    });
+
+                }, seq.delay);
                 simulationTimeouts.push(id);
             });
 
             // Final State
             const finalId = setTimeout(() => {
-                // Safety check before final update
                 const currentLogsArea = document.getElementById('runner-logs');
                 if (!currentLogsArea) return;
 
-                markComplete('node-4', null);
-                currentLogsArea.innerHTML += `<div class="text-green-400 font-bold mt-2">Done!</div>`;
+                updateStepUI('complete', 'success');
+                jobStatus.innerText = "Success";
+                jobStatus.className = "text-xs bg-green-600/20 text-green-400 px-2 py-0.5 rounded border border-green-600/30";
+                
                 if(finishBtn) finishBtn.classList.remove('hidden');
-            }, 9000);
+            }, 9500);
             simulationTimeouts.push(finalId);
         }
 
-        function markComplete(nodeId, lineId) {
-            const n = document.getElementById(nodeId);
-            if (n) { // Check existence
-                n.classList.remove('running', 'bg-white', 'text-gray-500', 'border-gray-300');
-                n.classList.add('completed');
-            }
+        function updateStepUI(stepId, status) {
+            const el = document.getElementById(`step-${stepId}`);
+            if (!el) return;
             
-            if(lineId) {
-                const line = document.getElementById(lineId);
-                if (line) { // Check existence
-                    line.style.backgroundColor = '#2ea44f';
-                }
+            const iconContainer = el.querySelector('.gh-icon');
+            
+            // Reset classes
+            el.classList.remove('active');
+            
+            if (status === 'running') {
+                el.classList.add('active');
+                iconContainer.innerHTML = '<div class="gh-spinner"></div>';
+            } else if (status === 'success') {
+                iconContainer.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" fill="#2ea44f"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>';
             }
         }
 

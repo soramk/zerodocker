@@ -238,7 +238,7 @@
                                     <div class="chart-container">
                                         <canvas id="layerChart"></canvas>
                                     </div>
-                                    <p class="text-xs text-center text-slate-400 mt-2">OSの上に言語、ライブラリ、アプリが積み重なります</p>
+                                    <p class="text-xs text-center text-slate-400 mt-2">下から順に積み重なる「レイヤー構造」です。<br>一番上があなたの作ったファイルです。</p>
                                 </div>
                             </div>
                         </div>
@@ -461,7 +461,7 @@ def hello():
                                 次はいよいよ、<strong>「アプリとデータベース」</strong>という複数のコンテナを連携させる<br>
                                 <strong>Docker Compose</strong> の世界へ進みます。
                             </p>
-                            <a href="#" class="inline-block bg-white text-blue-600 font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105">
+                            <a href="../index.html" class="inline-block bg-white text-blue-600 font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105">
                                 ロードマップに戻る
                             </a>
                         </div>
@@ -614,29 +614,59 @@ CMD ["python", "app.py"]`
         function initLayerChart() {
             const ctx = document.getElementById('layerChart').getContext('2d');
             new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['Debian (OS)', 'Python (Runtime)', 'Flask (Library)', 'app.py (App)'],
-                    datasets: [{
-                        data: [40, 30, 15, 5],
-                        backgroundColor: [
-                            '#94a3b8', // OS
-                            '#3b82f6', // Runtime
-                            '#10b981', // Libs
-                            '#eab308'  // App
-                        ],
-                        borderWidth: 0
-                    }]
+                    labels: ['Docker Image'],
+                    datasets: [
+                        {
+                            label: 'Layer 1: OS (Debian)',
+                            data: [30],
+                            backgroundColor: '#94a3b8', // Gray
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Layer 2: Runtime (Python)',
+                            data: [30],
+                            backgroundColor: '#3b82f6', // Blue
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Layer 3: Library (Flask)',
+                            data: [20],
+                            backgroundColor: '#10b981', // Green
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Layer 4: App (app.py)',
+                            data: [10],
+                            backgroundColor: '#eab308', // Yellow
+                            barPercentage: 0.6
+                        }
+                    ]
                 },
                 options: {
                     maintainAspectRatio: false,
                     responsive: true,
+                    scales: {
+                        x: { stacked: true, display: false },
+                        y: { stacked: true, display: false }
+                    },
                     plugins: {
-                        legend: { position: 'bottom' },
+                        legend: { 
+                            position: 'right',
+                            reverse: true // Show Top layer at top of legend
+                        },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    return context.label;
+                                label: (ctx) => ctx.dataset.label,
+                                afterLabel: (ctx) => {
+                                    const descs = [
+                                        ["FROM python:3.9-slim", "ベースとなる軽量Linux OS。", "Microsoft等が管理しています。"],
+                                        ["(Included in Base)", "Python実行環境。", "OSと一緒に提供されています。"],
+                                        ["RUN pip install", "Flaskライブラリ。", "requirements.txtから追加しました。"],
+                                        ["COPY . .", "あなたが書いたコード。", "一番上に乗ります。"]
+                                    ];
+                                    return descs[ctx.datasetIndex];
                                 }
                             }
                         }

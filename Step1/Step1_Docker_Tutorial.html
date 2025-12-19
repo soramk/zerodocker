@@ -249,7 +249,7 @@
                                     <div class="chart-container">
                                         <canvas id="layerChart"></canvas>
                                     </div>
-                                    <p class="text-xs text-center text-slate-400 mt-2">コンテナイメージは層（レイヤー）のように積み重なっています</p>
+                                    <p class="text-xs text-center text-slate-400 mt-2">下から順に積み重なる「レイヤー構造」です。<br>一番上があなたの作ったファイルです。</p>
                                 </div>
                             </div>
                         </div>
@@ -483,7 +483,7 @@
                                 あなたはコンテナの基本的なライフサイクル（作成・起動・停止・削除）をマスターしました。
                                 次は、アプリとデータベースを連携させる「Step 2 & 3」に挑戦しましょう！
                             </p>
-                            <a href="#" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform hover:scale-105">
+                            <a href="../index.html" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform hover:scale-105">
                                 ロードマップに戻る
                             </a>
                         </div>
@@ -614,28 +614,52 @@ COPY ./index.html /usr/share/nginx/html/index.html`
         function initLayerChart() {
             const ctx = document.getElementById('layerChart').getContext('2d');
             new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['Alpine Linux (OS)', 'Nginx (Middleware)', 'index.html (App)'],
-                    datasets: [{
-                        data: [5, 15, 1], // Artificial weights for visualization
-                        backgroundColor: [
-                            '#3b82f6', // OS - Blue
-                            '#10b981', // Middleware - Green
-                            '#f59e0b'  // App - Yellow
-                        ],
-                        borderWidth: 0
-                    }]
+                    labels: ['Docker Image'],
+                    datasets: [
+                        {
+                            label: 'Layer 1: Base OS (Alpine)',
+                            data: [20],
+                            backgroundColor: '#3b82f6', // Blue
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Layer 2: Middleware (Nginx)',
+                            data: [25],
+                            backgroundColor: '#10b981', // Green
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Layer 3: App (index.html)',
+                            data: [15],
+                            backgroundColor: '#f59e0b', // Yellow
+                            barPercentage: 0.6
+                        }
+                    ]
                 },
                 options: {
                     maintainAspectRatio: false,
                     responsive: true,
+                    scales: {
+                        x: { stacked: true, display: false },
+                        y: { stacked: true, display: false }
+                    },
                     plugins: {
-                        legend: { position: 'bottom' },
+                        legend: { 
+                            position: 'right',
+                            reverse: true // Show Top layer at top of legend
+                        },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    return context.label + ': Layer';
+                                label: (ctx) => ctx.dataset.label,
+                                afterLabel: (ctx) => {
+                                    const descs = [
+                                        ["FROM nginx:alpine", "土台となる軽量Linux OS。", "ここから全てが始まります。"],
+                                        ["apk add nginx", "Webサーバー機能。", "ベースイメージに含まれています。"],
+                                        ["COPY ./index.html", "あなたが作成したファイル。", "一番上に乗ります。"]
+                                    ];
+                                    return descs[ctx.datasetIndex];
                                 }
                             }
                         }
