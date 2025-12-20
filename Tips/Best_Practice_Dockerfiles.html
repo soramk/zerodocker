@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>優秀なDockerfileコレクション: Best Practices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: "Best Practice Gold". Background: Dark/Light Mode aware. Accents: Gold (#f59e0b) for excellence, Green for Good, Red for Bad. -->
+    
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .nav-item.active {
+            background-color: #fffbeb; /* Amber 50 */
+            border-left: 4px solid #f59e0b; /* Amber 500 */
+            color: #b45309; /* Amber 700 */
+        }
+        .nav-item {
+            border-left: 4px solid transparent;
+        }
+        
+        /* Code diff styles */
+        .diff-add {
+            background-color: #dcfce7; /* Green 100 */
+            display: block;
+            width: 100%;
+        }
+        .diff-remove {
+            background-color: #fee2e2; /* Red 100 */
+            text-decoration: line-through;
+            color: #991b1b;
+            display: block;
+            width: 100%;
+            opacity: 0.7;
+        }
+        .code-line {
+            display: block;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 z-10 flex-none shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🏆</span>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 leading-none">Dockerfile Best Practices</h1>
+                    <p class="text-xs text-slate-500 mt-1">プロが使う「優秀なDockerfile」のパターン集</p>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <a href="#" class="text-sm font-medium text-slate-500 hover:text-amber-600 transition-colors">
+                    <span class="mr-2">📚</span>Docker Document Reference
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-grow flex flex-col md:flex-row overflow-hidden max-w-7xl mx-auto w-full">
+        
+        <!-- Left Sidebar: List of Practices -->
+        <nav class="w-full md:w-80 bg-white border-r border-slate-200 flex-none overflow-y-auto z-0">
+            <div class="p-4">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Patterns</h2>
+                <div class="space-y-1" id="nav-list">
+                    <!-- Nav items injected via JS -->
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                <div class="text-xs text-slate-500">
+                    <p class="font-bold mb-1">💡 ヒント</p>
+                    <p>リストをクリックして、なぜその書き方が「優秀」なのかを確認しましょう。</p>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Right Content: Details -->
+        <main class="flex-grow bg-slate-50 overflow-y-auto p-4 md:p-8 relative" id="main-content">
+            <!-- Content injected via JS -->
+            <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                <div class="text-4xl mb-4">👈</div>
+                <p>左のリストから項目を選択してください</p>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Templates & Scripts -->
+    <script>
+        // --- DATA ---
+        const practices = [
+            {
+                id: "multi-stage",
+                title: "Multi-stage Build",
+                subtitle: "劇的なサイズダウンの魔法",
+                tags: ["Golang", "Rust", "C++", "Size"],
+                description: `
+                    <p class="mb-4">
+                        コンパイル言語（Go, Rustなど）では、「ビルドに必要なツール（コンパイラ）」と「実行に必要な環境」は異なります。<br>
+                        ビルド環境を本番イメージに残すと、サイズが肥大化し、セキュリティリスクも高まります。
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <h4 class="font-bold text-blue-700">ポイント</h4>
+                        <ul class="list-disc list-inside text-sm text-blue-800">
+                            <li><code>AS builder</code> でビルド用ステージに名前をつける</li>
+                            <li><code>COPY --from=builder</code> で、できたバイナリだけを軽量OSにコピーする</li>
+                        </ul>
+                    </div>
+                `,
+                badCode: `FROM golang:1.19
+
+WORKDIR /app
+COPY . .
+RUN go build -o myapp main.go
+
+CMD ["./myapp"]
+# 結果: 800MB超 (Goのコンパイラごとするため)`,
+                goodCode: `# 1. ビルド用ステージ (builderという名前をつける)
+FROM golang:1.19 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o myapp main.go
+
+# 2. 実行用ステージ (Alpineなどの超軽量OS)
+FROM alpine:latest
+WORKDIR /root/
+# builderステージから成果物だけをコピー
+COPY --from=builder /app/myapp .
+
+CMD ["./myapp"]
+# 結果: 約10MB (バイナリと最小限のOSのみ)`,
+                impact: "サイズ: 800MB → 10MB (約98%削減)"
+            },
+            {
+                id: "layer-caching",
+                title: "Layer Caching Optimization",
+                subtitle: "ビルド時間を極限まで短縮",
+                tags: ["Node.js", "Python", "Ruby", "Speed"],
+                description: `
+                    <p class="mb-4">
+                        Dockerは上から順にコマンドを実行し、変更がない行は「キャッシュ」を使います。<br>
+                        ソースコードを修正するたびに、重たい <code>npm install</code> や <code>pip install</code> が走り直すのは時間の無駄です。
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <h4 class="font-bold text-blue-700">ポイント</h4>
+                        <ul class="list-disc list-inside text-sm text-blue-800">
+                            <li>頻繁に変更されるファイル（ソースコード）は、なるべく後に記述する。</li>
+                            <li>滅多に変更されないファイル（package.jsonなど）を先にコピーしてインストールする。</li>
+                        </ul>
+                    </div>
+                `,
+                badCode: `FROM node:18
+
+WORKDIR /app
+
+# ソースも設定ファイルも全部一気にコピー
+COPY . .
+
+# ソースを1文字変えただけで、ここも再実行されてしまう！
+RUN npm install
+
+CMD ["node", "index.js"]`,
+                goodCode: `FROM node:18
+
+WORKDIR /app
+
+# 1. まず依存関係定義ファイルだけをコピー
+COPY package.json package-lock.json ./
+
+# 2. 依存関係をインストール (ここはpackage.jsonが変わらない限りキャッシュされる！)
+RUN npm install
+
+# 3. その後にソースコードをコピー
+COPY . .
+
+CMD ["node", "index.js"]`,
+                impact: "2回目以降のビルド時間: 3分 → 1秒"
+            },
+            {
+                id: "security-user",
+                title: "Non-root User",
+                subtitle: "セキュリティの基本",
+                tags: ["Security", "General"],
+                description: `
+                    <p class="mb-4">
+                        デフォルトではコンテナ内のプロセスは <code>root</code> 権限で動きます。<br>
+                        もしコンテナに脆弱性があり乗っ取られた場合、ホストOSへの深刻な攻撃につながるリスクがあります。
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <h4 class="font-bold text-blue-700">ポイント</h4>
+                        <ul class="list-disc list-inside text-sm text-blue-800">
+                            <li>公式イメージには多くの場合、専用のユーザー（nodeユーザーなど）が用意されている。</li>
+                            <li>または <code>useradd</code> でユーザーを作り、<code>USER</code> 命令で切り替える。</li>
+                        </ul>
+                    </div>
+                `,
+                badCode: `FROM node:18
+
+WORKDIR /app
+COPY . .
+RUN npm install
+
+# 指定がないので root で実行される
+CMD ["node", "index.js"]`,
+                goodCode: `FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# セキュリティのため node ユーザーに切り替え
+# (Node公式イメージには最初から node ユーザーがいる)
+USER node
+
+CMD ["node", "index.js"]`,
+                impact: "万が一の侵害時の被害範囲を大幅に限定"
+            },
+            {
+                id: "distroless",
+                title: "Use Distroless",
+                subtitle: "攻撃者が使える道具を消す",
+                tags: ["Security", "Size", "Advanced"],
+                description: `
+                    <p class="mb-4">
+                        Googleが提供する「Distroless」イメージは、アプリの実行に必要な最小限のものしか入っていません。<br>
+                        <strong>シェル (bash/sh) すら入っていない</strong>ため、攻撃者が侵入してもコマンドを実行することが極めて困難になります。
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <h4 class="font-bold text-blue-700">ポイント</h4>
+                        <ul class="list-disc list-inside text-sm text-blue-800">
+                            <li>軽量化とセキュリティの究極形。</li>
+                            <li>デバッグ（コンテナの中に入って確認）も難しくなるため、本番環境向け。</li>
+                        </ul>
+                    </div>
+                `,
+                badCode: `FROM python:3.9
+
+WORKDIR /app
+COPY . .
+# 便利なツールがたくさん入っているが、攻撃者にとっても便利
+CMD ["python", "app.py"]`,
+                goodCode: `# ビルドステージ
+FROM python:3.9 AS builder
+WORKDIR /app
+COPY . .
+# 必要なライブラリを所定の場所にインストールするなど...
+
+# 実行ステージ: Distroless
+FROM gcr.io/distroless/python3
+COPY --from=builder /app /app
+WORKDIR /app
+
+# シェルがないので、これ以外何もできない
+CMD ["app.py"]`,
+                impact: "攻撃対象領域(Attack Surface)の極小化"
+            },
+            {
+                id: "env-vars",
+                title: "Handling Secrets",
+                subtitle: "機密情報を焼き込まない",
+                tags: ["Security", "Config"],
+                description: `
+                    <p class="mb-4">
+                        APIキーやパスワードをDockerfile内の <code>ENV</code> やコードに直接書くのは厳禁です。<br>
+                        <code>docker history</code> コマンドを使えば、過去のレイヤーに含まれる情報は誰でも見れてしまいます。
+                    </p>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <h4 class="font-bold text-blue-700">ポイント</h4>
+                        <ul class="list-disc list-inside text-sm text-blue-800">
+                            <li>機密情報はビルド時ではなく、<strong>実行時</strong>に環境変数として注入する。</li>
+                            <li>ビルド時に必要な場合は、Dockerの <code>--secret</code> 機能を使う（上級編）。</li>
+                        </ul>
+                    </div>
+                `,
+                badCode: `FROM node:18
+
+# 絶対にやってはいけない！
+ENV DB_PASSWORD=my_super_secret_password
+ENV API_KEY=123456789
+
+COPY . .
+CMD ["node", "index.js"]`,
+                goodCode: `FROM node:18
+
+# デフォルト値が必要なら書いてもいいが、機密情報は書かない
+ENV PORT=8080
+
+COPY . .
+
+# パスワードなどは、実行時(docker run)に
+# -e DB_PASSWORD=xxx で渡すか、
+# k8sのSecret機能などを使って注入する
+CMD ["node", "index.js"]`,
+                impact: "情報漏洩リスクの回避"
+            }
+        ];
+
+        let currentPracticeId = null;
+
+        // --- FUNCTIONS ---
+
+        function renderNav() {
+            const navList = document.getElementById('nav-list');
+            navList.innerHTML = '';
+
+            practices.forEach(practice => {
+                const btn = document.createElement('button');
+                btn.className = `nav-item w-full text-left px-4 py-3 rounded hover:bg-slate-50 transition-all group`;
+                btn.onclick = () => loadContent(practice.id);
+                
+                // Active state check
+                if (practice.id === currentPracticeId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.add('text-slate-600');
+                }
+
+                // Tag generation
+                const tagHtml = practice.tags.map(t => 
+                    `<span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded mr-1">${t}</span>`
+                ).join('');
+
+                btn.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="font-bold text-sm mb-1 group-hover:text-amber-700 transition-colors">${practice.title}</div>
+                    </div>
+                    <div class="text-xs opacity-80 mb-2 truncate">${practice.subtitle}</div>
+                    <div class="flex flex-wrap gap-1">${tagHtml}</div>
+                `;
+                navList.appendChild(btn);
+            });
+        }
+
+        function loadContent(id) {
+            currentPracticeId = id;
+            renderNav(); // Re-render to update active state
+
+            const data = practices.find(p => p.id === id);
+            const content = document.getElementById('main-content');
+
+            // Construct Code Block HTML safely
+            const badCodeHtml = escapeHtml(data.badCode);
+            const goodCodeHtml = escapeHtml(data.goodCode);
+
+            content.innerHTML = `
+                <div class="max-w-4xl mx-auto animate-fade-in">
+                    <!-- Title Header -->
+                    <div class="mb-8 border-b border-slate-200 pb-4">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <h2 class="text-3xl font-bold text-slate-800">${data.title}</h2>
+                            ${data.tags.map(t => `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full">${t}</span>`).join('')}
+                        </div>
+                        <p class="text-xl text-slate-500">${data.subtitle}</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="prose text-slate-600 mb-8">
+                        ${data.description}
+                    </div>
+
+                    <!-- Comparison Section -->
+                    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Bad Pattern -->
+                        <div class="bg-red-50 rounded-xl border border-red-200 overflow-hidden flex flex-col">
+                            <div class="bg-red-100 px-4 py-2 border-b border-red-200 flex justify-between items-center">
+                                <span class="font-bold text-red-800 text-sm">❌ Bad Pattern</span>
+                                <span class="text-xs text-red-600">非推奨</span>
+                            </div>
+                            <div class="p-4 overflow-x-auto flex-grow bg-[#fff5f5]">
+                                <pre class="font-mono text-xs text-slate-700 whitespace-pre-wrap">${badCodeHtml}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Good Pattern -->
+                        <div class="bg-green-50 rounded-xl border border-green-200 overflow-hidden shadow-md flex flex-col">
+                            <div class="bg-green-100 px-4 py-2 border-b border-green-200 flex justify-between items-center">
+                                <span class="font-bold text-green-800 text-sm">✅ Best Practice</span>
+                                <span class="text-xs text-green-600 font-bold">推奨</span>
+                            </div>
+                            <div class="p-4 overflow-x-auto flex-grow bg-white">
+                                <pre class="font-mono text-xs text-slate-800 whitespace-pre-wrap">${goodCodeHtml}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impact Box -->
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-6 rounded-xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs text-slate-300 uppercase tracking-wider font-bold mb-1">Impact</h4>
+                            <p class="text-lg font-bold text-amber-400">${data.impact}</p>
+                        </div>
+                        <div class="text-3xl">🚀</div>
+                    </div>
+                </div>
+            `;
+            
+            // Scroll to top
+            content.scrollTop = 0;
+        }
+
+        // Utility to prevent HTML injection in code blocks
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Add simple fade-in animation
+        document.head.insertAdjacentHTML("beforeend", `<style>.animate-fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>`)
+
+        // --- INIT ---
+        window.onload = () => {
+            renderNav();
+            // Load first item by default
+            if(practices.length > 0) {
+                loadContent(practices[0].id);
+            }
+        };
+
+    </script>
+</body>
+</html>
